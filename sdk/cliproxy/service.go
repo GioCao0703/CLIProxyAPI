@@ -1306,16 +1306,19 @@ func (s *Service) resolveConfigClaudeKey(auth *coreauth.Auth) *config.ClaudeKey 
 		cfgBase := strings.TrimSpace(entry.BaseURL)
 		if attrKey != "" && attrBase != "" {
 			if strings.EqualFold(cfgKey, attrKey) && strings.EqualFold(cfgBase, attrBase) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 			continue
 		}
 		if attrKey != "" && strings.EqualFold(cfgKey, attrKey) {
 			if cfgBase == "" || strings.EqualFold(cfgBase, attrBase) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 		}
 		if attrKey == "" && attrBase != "" && strings.EqualFold(cfgBase, attrBase) {
+			syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 			return entry
 		}
 	}
@@ -1323,6 +1326,7 @@ func (s *Service) resolveConfigClaudeKey(auth *coreauth.Auth) *config.ClaudeKey 
 		for i := range s.cfg.ClaudeKey {
 			entry := &s.cfg.ClaudeKey[i]
 			if strings.EqualFold(strings.TrimSpace(entry.APIKey), attrKey) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 		}
@@ -1345,11 +1349,13 @@ func (s *Service) resolveConfigGeminiKey(auth *coreauth.Auth) *config.GeminiKey 
 		cfgBase := strings.TrimSpace(entry.BaseURL)
 		if attrKey != "" && strings.EqualFold(cfgKey, attrKey) {
 			if cfgBase == "" || strings.EqualFold(cfgBase, attrBase) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 			continue
 		}
 		if attrKey == "" && attrBase != "" && strings.EqualFold(cfgBase, attrBase) {
+			syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 			return entry
 		}
 	}
@@ -1371,11 +1377,13 @@ func (s *Service) resolveConfigVertexCompatKey(auth *coreauth.Auth) *config.Vert
 		cfgBase := strings.TrimSpace(entry.BaseURL)
 		if attrKey != "" && strings.EqualFold(cfgKey, attrKey) {
 			if cfgBase == "" || strings.EqualFold(cfgBase, attrBase) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 			continue
 		}
 		if attrKey == "" && attrBase != "" && strings.EqualFold(cfgBase, attrBase) {
+			syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 			return entry
 		}
 	}
@@ -1383,6 +1391,7 @@ func (s *Service) resolveConfigVertexCompatKey(auth *coreauth.Auth) *config.Vert
 		for i := range s.cfg.VertexCompatAPIKey {
 			entry := &s.cfg.VertexCompatAPIKey[i]
 			if strings.EqualFold(strings.TrimSpace(entry.APIKey), attrKey) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 		}
@@ -1405,11 +1414,13 @@ func (s *Service) resolveConfigCodexKey(auth *coreauth.Auth) *config.CodexKey {
 		cfgBase := strings.TrimSpace(entry.BaseURL)
 		if attrKey != "" && strings.EqualFold(cfgKey, attrKey) {
 			if cfgBase == "" || strings.EqualFold(cfgBase, attrBase) {
+				syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 				return entry
 			}
 			continue
 		}
 		if attrKey == "" && attrBase != "" && strings.EqualFold(cfgBase, attrBase) {
+			syncAuthProxyURL(auth, entry.ProxyURL) // [P001] 桥接凭证级 proxy-url 到 auth
 			return entry
 		}
 	}
@@ -1793,4 +1804,13 @@ func applyOAuthModelAlias(cfg *config.Config, provider, authKind string, models 
 		}
 	}
 	return out
+}
+
+// syncAuthProxyURL syncs the per-credential proxy-url from config entry to the auth object.
+// [P001] 桥接凭证级 proxy-url: config.yaml 的 per-entry proxy-url → auth.ProxyURL
+// 当上游已内置此功能时，可删除此函数及所有调用点。
+func syncAuthProxyURL(auth *coreauth.Auth, proxyURL string) {
+	if auth != nil && proxyURL != "" {
+		auth.ProxyURL = proxyURL
+	}
 }
